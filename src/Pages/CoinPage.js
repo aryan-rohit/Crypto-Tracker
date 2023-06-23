@@ -7,11 +7,13 @@ import CoinInfo from '../components/CoinInfo';
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { numberWithCommas } from '../components/Banner/Carousel';
 import parse from 'html-react-parser';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 function CoinPage() {
     const {id}=useParams();
     const [coin, setCoin] = useState();
-    const { currency, symbol,user } = CryptoState();
+    const { currency, symbol, user, watchlist, setAlert } = CryptoState();
     const fetchCoin = async () => {
         const { data } = await axios.get(SingleCoin(id));
     
@@ -21,6 +23,51 @@ function CoinPage() {
       useEffect(() => {
         fetchCoin();
       }, [currency]);
+
+      const inWatchlist = watchlist.includes(coin?.id); //if it already includes coins then true
+
+  const addToWatchlist = async () => {
+    const coinRef = doc(db, "watchlist", user.uid);
+
+    try {
+      await setDoc(coinRef, {
+        coins: watchlist ? [...watchlist, coin?.id] : [coin?.id],
+      });
+
+      setAlert({
+        open: true,
+        message: `${coin.name} Added to the Watchlist`,
+        type: "success",
+      });
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message,
+        type: "error",
+      });
+    }
+  };
+
+  const removeFromWatchlist = async() => {
+    const coinRef = doc(db, "watchlist", user.uid);
+
+    try {
+      await setDoc(coinRef, { coins: watchlist.filter((wish) => wish !== coin?.id) },
+      { merge: true });
+
+      setAlert({
+        open: true,
+        message: `${coin.name} Removed from the Watchlist`,
+        type: "success",
+      });
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message,
+        type: "error",
+      });
+    }
+  };
       if (!coin) return <LinearProgress style={{ backgroundColor: "gold" }} />;
   return (
     <Box
@@ -164,12 +211,12 @@ function CoinPage() {
             style={{
               width: "100%",
               height: 40,
-            //   backgroundColor:inWatchlist ? "#ff0000" : "#EEBC1D",
+              backgroundColor:inWatchlist ? "#ff0000" : "#EEBC1D",
               marginTop: 20,
             }}
-            // onClick={inWatchlist? removeFromWatchlist : addToWatchlist}
+            onClick={inWatchlist? removeFromWatchlist : addToWatchlist}
           >
-            {/* {inWatchlist?"Remove from Watchlist" : "Add to Watchlist"} */}
+            {inWatchlist?"Remove from Watchlist" : "Add to Watchlist"}
           </Button>
         )}
       </Box>

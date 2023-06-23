@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { Box, CircularProgress, createTheme } from "@mui/material";
 import { ThemeProvider } from "@emotion/react";
 import { Line } from "react-chartjs-2";
-// import Chart from "chart.js/auto";
+import Chart from "chart.js/auto";
 import { chartDays } from "../config/ChartDays";
 import SelectButton from "./SelectButton";
 
